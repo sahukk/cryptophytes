@@ -1,0 +1,37 @@
+rules_version = '2';
+// Security rules for the Cryptophytes companion website (Cloud Firestore).
+// Replace OWNER_UID_HERE with the author's user ID (shown on admin.html), then
+// paste these rules into Firebase console > Firestore Database > Rules > Publish.
+service cloud.firestore {
+  match /databases/{db}/documents {
+    function signedIn() { return request.auth != null; }
+    function isOwner() { return signedIn() && request.auth.uid == 'OWNER_UID_HERE'; }
+    function verified() {
+      return request.auth.token.email_verified == true
+          || request.auth.token.firebase.sign_in_provider == 'google.com';
+    }
+    function activeReader() {
+      return signedIn() && verified()
+          && exists(/databases/$(db)/documents/readers/$(request.auth.uid))
+          && get(/databases/$(db)/documents/readers/$(request.auth.uid)).data.blocked == false;
+    }
+
+    // Model answers: readable only by registered, verified, unblocked readers; written only by the author.
+    match /answers/{chapter} {
+      allow read: if activeReader() || isOwner();
+      allow write: if isOwner();
+    }
+
+    // Reader registrations: each reader creates only their own record, once, with consent;
+    // only the author can list, update (block/allow) or delete records.
+    match /readers/{uid} {
+      allow get: if signedIn() && (request.auth.uid == uid || isOwner());
+      allow list, update, delete: if isOwner();
+      allow create: if signedIn() && verified() && request.auth.uid == uid
+                    && request.resource.data.consent == true
+                    && request.resource.data.blocked == false
+                    && request.resource.data.keys().hasOnly(['name','email','college','city','role','source',
+                         'mobile','whatsappUpdates','consent','blocked','registered']);
+    }
+  }
+}
