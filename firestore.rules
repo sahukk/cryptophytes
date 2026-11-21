@@ -1,6 +1,6 @@
 rules_version = '2';
 // Security rules for the Cryptophytes companion website (Cloud Firestore).
-// Replace NAVj5leQfAcp4REoRgJrXjQktTa2 with the author's user ID (shown on admin.html), then
+// The author user ID below is shown on admin.html after the author signs in.
 // paste these rules into Firebase console > Firestore Database > Rules > Publish.
 service cloud.firestore {
   match /databases/{db}/documents {
