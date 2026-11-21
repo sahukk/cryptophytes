@@ -3,6 +3,7 @@ import { initFirebase, auth, db, A, F, $, esc, niceError } from "./fb.js";
 const view = $("#view");
 const show = (html) => { view.innerHTML = html; window.scrollTo(0, 0); };
 const params = new URLSearchParams(location.search);
+const MAXCH = 12;   // chapters 1–11 plus the Puzzle Page (12)
 
 function signedInBar(user) {
   $("#who").innerHTML = user
@@ -106,7 +107,7 @@ async function listView() {
   const ch = snap.docs.map((d) => d.data()).sort((a, b) => a.n - b.n);
   if (!ch.length) return show(`<h1>Model answers</h1><div class="msg">The answers are being uploaded. Please visit again soon.</div>`);
   show(`<h1>Model answers</h1>
-    <p>Choose a chapter. Each page has the answers to the multiple choice, short answer and long answer questions of that chapter.</p>
+    <p>Choose a chapter. Each page has the answers to the multiple choice, short answer and long answer questions of that chapter. The last item has the answers to the Puzzle Page at the end of the book.</p>
     <ul class="chlist">${ch.map((c) => `<li><a href="answers.html?ch=${c.n}">${esc(c.title)}</a></li>`).join("")}</ul>`);
 }
 
@@ -115,8 +116,8 @@ async function chapterView(n) {
   const d = await F.getDoc(F.doc(db, "answers", id));
   if (!d.exists()) return listView();
   const c = d.data();
-  const prev = n > 1 ? `<a class="btn secondary" href="answers.html?ch=${n - 1}">← Chapter ${n - 1}</a>` : "<span></span>";
-  const next = n < 11 ? `<a class="btn secondary" href="answers.html?ch=${n + 1}">Chapter ${n + 1} →</a>` : "<span></span>";
+  const prev = n > 1 ? `<a class="btn secondary" href="answers.html?ch=${n - 1}">← Previous</a>` : "<span></span>";
+  const next = n < MAXCH ? `<a class="btn secondary" href="answers.html?ch=${n + 1}">Next →</a>` : "<span></span>";
   show(`<p class="noprint"><a href="answers.html">All chapters</a></p>
     <div class="answer">${c.html}</div>
     <div class="navrow">${prev}<a class="btn secondary" href="#" onclick="window.print();return false;">Print or save as PDF</a>${next}</div>`);
@@ -134,7 +135,7 @@ async function chapterView(n) {
       if (!r.exists()) return registerView(user);
       if (r.data().blocked) return show('<div class="err">Access for this account has been stopped. Please contact the author.</div>');
       const n = parseInt(params.get("ch"), 10);
-      return n >= 1 && n <= 11 ? chapterView(n) : listView();
+      return n >= 1 && n <= MAXCH ? chapterView(n) : listView();
     } catch (e) {
       show(`<div class="err">${esc(niceError(e))}</div>`);
     }
