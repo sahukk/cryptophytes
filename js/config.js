@@ -10,4 +10,4 @@ export const firebaseConfig = {
   messagingSenderId: "373169057519",
   appId: "1:373169057519:web:835effca81e797b857751a"
 };
-export const OWNER_UID = "";          // the author's Firebase user ID (shown on admin.html after first sign-in)
+export const OWNER_UID = "NAVj5leQfAcp4REoRgJrXjQktTa2";          // the author's Firebase user ID (shown on admin.html after first sign-in)
